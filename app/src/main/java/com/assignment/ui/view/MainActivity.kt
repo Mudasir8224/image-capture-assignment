@@ -41,7 +41,6 @@ class MainActivity : AppCompatActivity() {
 
     private val apiKey = "6d207e02198a847aa98d0a2a901485a5";
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -74,10 +73,8 @@ class MainActivity : AppCompatActivity() {
         val storageGranted = permissions[Manifest.permission.READ_MEDIA_IMAGES] ?: false
 
         if (cameraGranted && storageGranted) {
-            // Both permissions are granted, start the camera
 //            startCamera()
         } else {
-            // One or both permissions are denied, show a message to the user
             Toast.makeText(this, "Camera and storage permissions are required.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -88,12 +85,10 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
 
-            // Build the preview use case
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(binding.previewView.surfaceProvider)
             }
 
-            // Build the image capture use case
             val imageCapture = ImageCapture.Builder().build()
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -119,13 +114,10 @@ class MainActivity : AppCompatActivity() {
                     put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES) // Save in Pictures directory
                 }
 
-                // Insert the new image into the MediaStore and get the Uri
                 val imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
 
-                // Create a temporary file
                 val tempFile = File.createTempFile("image_${System.currentTimeMillis()}", ".jpg")
 
-                // Capture the image and save it to the provided Uri
                 imageUri?.let {
                     // Use OutputFileOptions to specify where to save the captured image
                     val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
@@ -136,7 +128,6 @@ class MainActivity : AppCompatActivity() {
                         ContextCompat.getMainExecutor(this@MainActivity),
                         object : ImageCapture.OnImageSavedCallback {
                             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                // Move the image from the temporary file to the MediaStore
                                 contentResolver.openOutputStream(it)?.use { outputStream ->
                                     tempFile.inputStream().use { inputStream ->
                                         inputStream.copyTo(outputStream) // Copy the image data to the MediaStore
@@ -151,17 +142,14 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             override fun onError(exception: ImageCaptureException) {
-                                // Handle capture error
                                 Log.e("CameraX", "Image capture failed: ${exception.message}", exception)
                             }
                         }
                     )
                 } ?: run {
-                    // Handle the case where the image URI couldn't be created
                     Log.e("CameraX", "Failed to create image Uri")
                 }
 
-                // Delay for 15 seconds before capturing the next image
                 delay(15000) // Adjust the delay as necessary
             }
         }
